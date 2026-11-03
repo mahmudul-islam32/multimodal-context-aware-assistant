@@ -286,7 +286,12 @@ def to_markdown(m: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main(argv=None):
+def main(argv=None) -> None:
+    """Console entry point (``mcaa-eval``). Returns None so the exit code is 0."""
+    run(argv)
+
+
+def run(argv=None) -> dict:
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--out", default=str(ROOT / "results"))
