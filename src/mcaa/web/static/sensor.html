@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sensor Bridge</title>
+  <style>
+    body { font: 18px system-ui, sans-serif; background: #0f172a; color: #e8eefc; margin: 0; padding: 1.2rem; }
+    button { font: inherit; min-height: 64px; width: 100%; border-radius: 14px; border: 0; background: #3b82f6; color: #fff; font-weight: 700; }
+    button.stop { background: #ef4444; } pre { background: #111c33; padding: 1rem; border-radius: 12px; white-space: pre-wrap; }
+    .state { font-size: 2rem; font-weight: 800; text-align: center; margin: 1rem 0; }
+  </style>
+</head>
+<body>
+  <h1>Sensor bridge</h1>
+  <p>Streams accelerometer and gyroscope at ~50 Hz over WebSocket (DeviceMotion API). Keep the phone in a pocket or on the wrist.</p>
+  <button id="go">Start streaming</button>
+  <div class="state" id="state" aria-live="polite">–</div>
+  <pre id="stats">not streaming</pre>
+<script>
+let ws, buf = [], on = false;
+const go = document.getElementById("go");
+function onMotion(e) {
+  const a = e.accelerationIncludingGravity || {}, r = e.rotationRate || {};
+  const d2r = Math.PI / 180;
+  buf.push({ t: performance.timeOrigin / 1000 + e.timeStamp / 1000, sent_at: Date.now() / 1000,
+    ax: a.x || 0, ay: a.y || 0, az: a.z || 0, gx: (r.alpha || 0) * d2r, gy: (r.beta || 0) * d2r, gz: (r.gamma || 0) * d2r });
+  if (buf.length >= 10 && ws.readyState === 1) { ws.send(JSON.stringify({ unit: "ms2", samples: buf })); buf = []; }
+}
+go.onclick = async () => {
+  if (on) { window.removeEventListener("devicemotion", onMotion); ws.close(); on = false; go.textContent = "Start streaming"; go.className = ""; return; }
+  if (typeof DeviceMotionEvent !== "undefined" && DeviceMotionEvent.requestPermission) await DeviceMotionEvent.requestPermission();
+  ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/sensors`);
+  ws.onmessage = (m) => { const d = JSON.parse(m.data); document.getElementById("state").textContent = d.context;
+    document.getElementById("stats").textContent = JSON.stringify(d.stats, null, 1); };
+  window.addEventListener("devicemotion", onMotion);
+  on = true; go.textContent = "Stop"; go.className = "stop";
+};
+</script>
+</body>
+</html>

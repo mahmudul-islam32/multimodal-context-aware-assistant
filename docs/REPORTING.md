@@ -1,6 +1,6 @@
 # Reporting, Documentation and Reproducibility Plan
 
-> Status: planned.
+> Status: the technical documentation is in place for v0.1 (model card, scenario guide, safety case, changelog). The paper is still planned.
 
 ## Paper
 
@@ -53,14 +53,14 @@ Weekly progress notes (what was done, decisions, open issues) are kept in `docs/
 
 ## Reproducibility checklist
 
-- [ ] Fixed random seeds; seeds reported.
+- [x] Fixed random seeds; seeds reported.
 - [ ] Pinned dependencies (lock file) and Docker image.
-- [ ] Dataset download scripts with checksums (UCI HAR, WISDM); licences cited.
+- [x] Dataset download scripts with checksums (UCI HAR, WISDM); licences cited.
 - [ ] Subject-wise data splits published.
-- [ ] Model and prompt versions recorded with every result.
+- [x] Model and prompt versions recorded with every result.
 - [ ] Verified document set (or a public substitute) and gold question set released.
-- [ ] Configs for both study conditions released.
-- [ ] Analysis scripts run end to end from exported logs to figures.
+- [x] Configs for both study conditions released.
+- [x] Analysis scripts run end to end from exported logs to figures.
 - [ ] Hardware used for latency numbers documented.
 - [ ] Only anonymised, aggregated study data published, as covered by consent.
 - [ ] Tagged release (v0.1) linked from the paper.

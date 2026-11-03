@@ -1,0 +1,6 @@
+dataset: synthetic   # uci-har | wisdm | synthetic
+model: rf            # rf | cnn
+folds: 4
+seed: 42
+out: models/har_rf.pkl
+report: results/har

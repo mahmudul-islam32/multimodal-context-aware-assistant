@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Context-Aware Assistant</title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="sim-warning" class="banner warn" role="alert" hidden></div>
+  <header class="top">
+    <div>
+      <h1 id="scenario-name">Context-Aware Assistant</h1>
+      <p id="task-title" class="muted"></p>
+    </div>
+    <div class="top-right">
+      <span id="condition-badge" class="badge" title="Study condition">A · context-aware</span>
+      <button id="researcher-toggle" class="ghost" aria-expanded="false" aria-controls="researcher">Researcher</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- task steps -->
+    <section class="panel steps" aria-labelledby="steps-h">
+      <h2 id="steps-h">Task steps</h2>
+      <ol id="steps"></ol>
+      <div class="row">
+        <button id="prev-step" class="big secondary" aria-label="Previous step">◀ Back</button>
+        <button id="next-step" class="big primary" aria-label="Next step">Next ▶</button>
+      </div>
+    </section>
+
+    <!-- conversation -->
+    <section class="panel convo" aria-labelledby="answer-h">
+      <h2 id="answer-h" class="sr-only">Answer</h2>
+      <div id="answer-card" class="answer-card" aria-live="polite" tabindex="0">
+        <div id="answer-meta" class="answer-meta">Ask a question by voice or text.</div>
+        <div id="answer-text" class="answer-text"></div>
+        <div id="voice-line" class="voice-line" hidden><span aria-hidden="true">🔊</span> <span id="voice-text"></span>
+          <button id="stop-voice" class="small danger" aria-label="Stop speaking">Stop</button></div>
+        <button id="show-details" class="small secondary" hidden>Show full answer</button>
+      </div>
+      <div class="ask">
+        <button id="ptt" class="ptt" aria-label="Hold to talk">🎙️<span>Hold to talk</span></button>
+        <form id="ask-form" class="ask-form">
+          <label for="q" class="sr-only">Question</label>
+          <input id="q" autocomplete="off" placeholder="Type a question…" required>
+          <button class="big primary" type="submit">Ask</button>
+        </form>
+      </div>
+      <div id="history" class="history" aria-label="Conversation history"></div>
+    </section>
+
+    <!-- context + sources -->
+    <aside class="panel side">
+      <section id="context-panel" aria-labelledby="ctx-h">
+        <h2 id="ctx-h">Context</h2>
+        <div id="ctx-chip" class="ctx-chip IDLE"><span id="ctx-state">IDLE</span><small id="ctx-conf"></small></div>
+        <p id="ctx-reason" class="muted"></p>
+        <div class="override" role="group" aria-label="Override context">
+          <button data-ov="IDLE">Idle</button><button data-ov="HANDS_BUSY">Hands busy</button>
+          <button data-ov="MOVING">Moving</button><button data-ov="NOISY">Noisy</button>
+          <button data-ov="" class="secondary">Auto</button>
+        </div>
+        <div id="activity" class="bars" aria-label="Activity probabilities"></div>
+      </section>
+      <section aria-labelledby="src-h">
+        <h2 id="src-h">Sources</h2>
+        <div id="sources" class="sources"><p class="muted">Cited document sections appear here.</p></div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- researcher drawer -->
+  <section id="researcher" class="drawer" hidden aria-label="Researcher controls">
+    <h2>Study mode</h2>
+    <div class="form-row">
+      <label>Scenario <select id="scenario-select"></select></label>
+      <label>Participant <input id="pid" placeholder="P01" size="5"></label>
+      <label>Condition <select id="cond"><option value="A">A context-aware</option><option value="B">B plain chatbot</option></select></label>
+      <label>Task set <select id="tset"><option>A</option><option>B</option></select></label>
+      <button id="start-task" class="primary">Start task</button>
+      <button id="complete-task">Complete task</button>
+      <button id="log-error" class="danger">Log error</button>
+    </div>
+    <p id="schedule" class="muted"></p>
+    <h3>Simulated sensor (demo without phone)</h3>
+    <div class="form-row" id="sim-buttons"></div>
+    <h3>Optional camera context</h3>
+    <div class="form-row">
+      <label><input type="checkbox" id="cam-consent"> I consent to local camera processing (frames are never stored)</label>
+      <video id="cam" autoplay muted playsinline width="160" height="120" hidden></video>
+    </div>
+    <h3>Data</h3>
+    <div class="form-row">
+      <button id="export">Export logs (CSV)</button>
+      <a href="sensor.html" target="_blank">Open phone sensor page</a>
+      <a href="docs" target="_blank">API docs</a>
+      <span id="docs-status" class="muted"></span>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

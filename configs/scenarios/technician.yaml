@@ -1,0 +1,32 @@
+id: technician
+name: Field technician - pump seal replacement
+description: Mock maintenance of the workshop pump P-101. Hands are often busy and gloved.
+simulator_only: false
+documents_dir: data/docs/technician
+escalation:
+  name: the shift supervisor
+  contact: ext. 4410
+context_config: context.yaml
+policy_config: policy.yaml
+task_sets:
+  A:
+    id: seal
+    title: Replace the mechanical seal on pump P-101
+    steps:
+      - {id: s1, text: "Lock out the pump and close valves V-11 and V-12", manual: true, doc_hint: lockout isolate valves}
+      - {id: s2, text: "Drain the casing and verify zero energy", manual: true, doc_hint: drain verify zero energy}
+      - {id: s3, text: "Remove the coupling guard", manual: true, doc_hint: coupling guard screws}
+      - {id: s4, text: "Remove the old mechanical seal", manual: true, doc_hint: remove seal puller}
+      - {id: s5, text: "Fit the new seal and torque the gland bolts", manual: true, doc_hint: gland follower bolts torque}
+      - {id: s6, text: "Refit the guard and check alignment", manual: true, doc_hint: alignment offset}
+      - {id: s7, text: "Restart and leak test", manual: false, doc_hint: leak test restart}
+  B:
+    id: bearing
+    title: Lubricate bearings and troubleshoot vibration on pump P-101
+    steps:
+      - {id: b1, text: "Lock out the pump", manual: true, doc_hint: lockout}
+      - {id: b2, text: "Grease the motor bearings", manual: true, doc_hint: bearing grease}
+      - {id: b3, text: "Check coupling alignment", manual: true, doc_hint: alignment}
+      - {id: b4, text: "Remove locks and restart", manual: false, doc_hint: remove lock restart}
+      - {id: b5, text: "Listen for cavitation noise", manual: false, doc_hint: cavitation noise}
+      - {id: b6, text: "Record the job", manual: false}

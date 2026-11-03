@@ -1,0 +1,27 @@
+id: care_worker
+name: Care worker - ward round (mock)
+description: Mock care checklist with fictional guidelines. No real patient data.
+simulator_only: false
+documents_dir: data/docs/care_worker
+escalation:
+  name: the nurse in charge
+  contact: bleep 220
+task_sets:
+  A:
+    id: reposition
+    title: Reposition a resident and check skin
+    steps:
+      - {id: r1, text: "Clean hands before touching the resident", manual: true, doc_hint: hand hygiene before}
+      - {id: r2, text: "Raise the bed and use a slide sheet with a colleague", manual: true, doc_hint: slide sheet two carers}
+      - {id: r3, text: "Position at 30 degree tilt", manual: true, doc_hint: 30 degree tilt pillow}
+      - {id: r4, text: "Check pressure areas", manual: true, doc_hint: skin check redness}
+      - {id: r5, text: "Record on turning chart", manual: false, doc_hint: record turning chart}
+  B:
+    id: observations
+    title: Take observations and decide on escalation
+    steps:
+      - {id: o1, text: "Clean hands", manual: true, doc_hint: hand rub}
+      - {id: o2, text: "Measure respiratory rate", manual: true, doc_hint: respiratory rate count}
+      - {id: o3, text: "Measure oxygen saturation and blood pressure", manual: true, doc_hint: saturation blood pressure}
+      - {id: o4, text: "Decide whether to escalate", manual: false, doc_hint: escalation thresholds}
+      - {id: o5, text: "Clean hands after the resident", manual: true, doc_hint: hand hygiene after}

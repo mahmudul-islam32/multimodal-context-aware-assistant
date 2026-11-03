@@ -1,6 +1,6 @@
 # Evaluation and User Study Protocol
 
-> Status: design. The study has **not** been run. Everything here is **planned**.
+> Status: the study has **not** been run. The offline component metrics (RQ4) are implemented in `mcaa-eval` (see `results/REPORT.md`). The analysis script `eval/analysis/analyze_study.py` is implemented and has been tested on simulated data only.
 
 ## Research questions
 
