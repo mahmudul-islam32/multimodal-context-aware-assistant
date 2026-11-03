@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assistant Analytics</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="pages.css">
+</head>
+<body class="page">
+  <header class="top">
+    <div><h1>Analytics</h1><p class="muted" id="sub">Live view of the event log: context, answers, refusals and guardrails.</p></div>
+    <nav class="top-right"><span class="live" id="live">live</span><a class="navlink" href="/">Assistant</a><a class="navlink" href="admin.html">Documents</a><span id="auth-mode" class="badge"></span></nav>
+  </header>
+  <form id="auth-form" class="authbar" hidden><label>Admin token <input id="token" type="password" autocomplete="off"></label><button class="primary">Save</button></form>
+  <div id="auth" class="banner warn" hidden>This server requires an admin token. Enter it above.</div>
+
+  <section class="kpis" id="kpis" aria-label="Key figures"></section>
+  <main class="pagegrid">
+    <section class="panel span3 chart"><h2>Context state over time</h2><div id="timeline"></div><div class="legend" id="tl-legend"></div></section>
+    <section class="panel chart"><h2>Answers by context</h2><div id="by-state"></div></section>
+    <section class="panel chart"><h2>Output modality</h2><div id="by-modality"></div></section>
+    <section class="panel chart"><h2>Guardrail events</h2><div id="guard"></div></section>
+    <section class="panel chart"><h2>Refusal reasons</h2><div id="reasons"></div></section>
+    <section class="panel chart"><h2>Most cited documents</h2><div id="sources"></div></section>
+    <section class="panel chart"><h2>Answers per minute</h2><div id="apm"></div></section>
+    <section class="panel span3"><h2>Recent answers</h2>
+      <table class="tbl" id="recent"><thead><tr><th>Time</th><th>Question (PII-redacted)</th><th>Context</th><th>Output</th><th>Result</th><th>Latency</th><th>Feedback</th></tr></thead><tbody></tbody></table>
+    </section>
+  </main>
+<script src="common.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

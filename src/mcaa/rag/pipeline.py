@@ -67,10 +67,16 @@ class RAGPipeline:
             f"Please ask {self.escalation.name} ({self.escalation.contact})."
         )
 
-    def _gate(self, query: str, hits: list[Hit]) -> tuple[bool, str, float]:
+    def _gate(self, query: str, hits: list[Hit], focus: str | None = None) -> tuple[bool, str, float]:
         if not hits:
             return False, "no matching document", 0.0
         best = hits[0]
+        if focus:
+            # follow-up: evidence must cover the user's own new terms
+            ft = set(content_tokens(focus))
+            if len(ft) >= 2:
+                best_cov = max(len(ft & set(content_tokens(f"{h.chunk.title} {h.chunk.section} {h.chunk.text}"))) / len(ft) for h in hits)
+                best = Hit(best.chunk, best.score, best.bm25, best.dense, max(best.coverage, best_cov))
         conf = min(1.0, 0.5 * best.coverage + 0.5 * min(1.0, best.bm25 / (3 * self.th.min_bm25)))
         ids = identifiers(query)
         if ids:
@@ -80,7 +86,7 @@ class RAGPipeline:
             missing = ids - have
             if missing:
                 return False, f"no approved document covers {', '.join(sorted(missing)).upper()}", conf * 0.3
-        if best.coverage < self.th.min_coverage or best.bm25 < self.th.min_bm25:
+        if best.coverage < self.th.min_coverage or hits[0].bm25 < self.th.min_bm25:
             return False, "evidence too weak", conf
         conflict = self._conflict(query, hits)
         if conflict:
@@ -103,7 +109,9 @@ class RAGPipeline:
         return ""
 
     # ------------------------------------------------------------------
-    def ask(self, query: str, step_hint: str = "") -> Answer:
+    def ask(self, query: str, step_hint: str = "", focus: str | None = None) -> Answer:
+        """Answer ``query``. ``focus`` is the user's literal follow-up when
+        ``query`` was expanded with conversation context."""
         t0 = time.perf_counter()
         events: list[dict] = []
         red, pii = redact(query)
@@ -117,7 +125,7 @@ class RAGPipeline:
                           generator="guardrail", latency_ms=_ms(t0), pii_found=pii, events=events)
 
         hits = self.retriever.search(red + " " + step_hint if step_hint and len(content_tokens(red)) < 3 else red, k=self.th.top_k)
-        ok, why, conf = self._gate(red, hits)
+        ok, why, conf = self._gate(red, hits, redact(focus)[0] if focus else None)
         if not ok:
             events.append({"type": "refusal", "reason": why})
             txt = self.refusal_text(why)

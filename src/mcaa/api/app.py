@@ -16,15 +16,28 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import numpy as np
-from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
+from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from ..assistant import Assistant
 from ..config import list_scenarios
+from ..ops.auth import auth_mode, require_admin
+from ..ops.metrics import Metrics
+from ..rag.governance import GovernanceError
 from ..sensors.synthetic import ACTIVITIES, SubjectProfile, generate_segment
 from ..speech.asr import decode_wav, get_asr
+from ..study.analytics import summarize
 from ..study.conditions import schedule_for, validate_pid
 from ..vision import ConsentRequired
 
@@ -54,13 +67,15 @@ class State:
     sim_task: asyncio.Task | None = None
     sim_activity: str | None = None
     asr = None
+    metrics = Metrics()
+    started = time.time()
 
 
 S = State()
 
 
 def build(scenario: str | None = None) -> Assistant:
-    a = Assistant(scenario or os.environ.get("MCAA_SCENARIO", "technician"))
+    a = Assistant(scenario or os.environ.get("MCAA_SCENARIO", "technician"), metrics=S.metrics)
     a.ensure_har()
     return a
 
@@ -73,7 +88,7 @@ async def lifespan(app: FastAPI):
         S.sim_task.cancel()
 
 
-app = FastAPI(title="Multimodal Context-Aware Assistant", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Multimodal Context-Aware Assistant", version="0.2.0", lifespan=lifespan)
 
 
 # ------------------------------------------------------------------ models
@@ -112,6 +127,17 @@ class AudioLevelIn(BaseModel):
     noise_dbfs: float
 
 
+class FeedbackIn(BaseModel):
+    answer_id: str
+    helpful: bool
+    comment: str = Field(default="", max_length=500)
+
+
+class ReviewIn(BaseModel):
+    reviewer: str = Field(min_length=2, max_length=80)
+    note: str = Field(default="", max_length=500)
+
+
 class ConsentIn(BaseModel):
     consent: bool
 
@@ -127,7 +153,24 @@ async def push_state(extra: dict | None = None):
 # ------------------------------------------------------------------ REST
 @app.get("/api/health")
 def health():
-    return {"ok": True, "scenario": S.assistant.scenario.id, "generator": S.assistant.rag.generator.name}
+    a = S.assistant
+    return {
+        "ok": True,
+        "version": app.version,
+        "uptime_s": round(time.time() - S.started, 1),
+        "scenario": a.scenario.id,
+        "generator": a.rag.generator.name,
+        "har_model": getattr(a.har, "name", None),
+        "active_chunks": len(a.store.active_chunks),
+        "policy_version": a.policy.cfg.version,
+        "auth": auth_mode(),
+    }
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+def metrics():
+    """Prometheus text exposition."""
+    return S.metrics.render()
 
 
 @app.get("/api/scenarios")
@@ -154,6 +197,83 @@ async def ask(body: AskIn):
     res = await asyncio.to_thread(S.assistant.ask, body.text, body.source, body.asr_confidence, body.noise_dbfs)
     await push_state()
     return res
+
+
+@app.post("/api/feedback")
+def feedback(body: FeedbackIn):
+    try:
+        return S.assistant.feedback(body.answer_id, body.helpful, body.comment)
+    except KeyError as e:
+        raise HTTPException(404, "unknown answer_id") from e
+
+
+@app.post("/api/conversation/reset")
+def reset_conversation():
+    S.assistant.memory.clear()
+    return {"ok": True}
+
+
+# ------------------------------------------------------------------ document governance
+@app.get("/api/docs", dependencies=[Depends(require_admin)])
+def docs_list():
+    return S.assistant.registry.listing()
+
+
+@app.post("/api/docs/upload", dependencies=[Depends(require_admin)])
+async def docs_upload(file: UploadFile = File(...), uploaded_by: str = Form(...)):
+    raw = (await file.read()).decode("utf-8", errors="replace")
+    if len(raw) > 200_000:
+        raise HTTPException(413, "document too large (max 200 kB)")
+    try:
+        p, ev = S.assistant.registry.upload(raw, uploaded_by)
+    except GovernanceError as e:
+        raise HTTPException(422, str(e)) from e
+    S.assistant.logger.log(ev.pop("type"), **ev)
+    S.metrics.inc("mcaa_documents_total", action="quarantined" if p.status == "quarantined" else "uploaded")
+    return p.public()
+
+
+@app.get("/api/docs/{doc_id}/diff", dependencies=[Depends(require_admin)])
+def docs_diff(doc_id: str):
+    try:
+        return S.assistant.registry.diff(doc_id)
+    except GovernanceError as e:
+        raise HTTPException(404, str(e)) from e
+
+
+@app.post("/api/docs/{doc_id}/approve", dependencies=[Depends(require_admin)])
+async def docs_approve(doc_id: str, body: ReviewIn):
+    a = S.assistant
+    try:
+        doc, ev = a.registry.approve(doc_id, body.reviewer, body.note)
+    except GovernanceError as e:
+        raise HTTPException(422, str(e)) from e
+    a.rag.reindex()
+    a.ingest_report.indexed.append(f"{doc.doc_id}@{doc.version}")
+    a.logger.log(ev.pop("type"), **ev)
+    S.metrics.inc("mcaa_documents_total", action="approved")
+    await push_state()
+    return a.registry.listing()
+
+
+@app.post("/api/docs/{doc_id}/reject", dependencies=[Depends(require_admin)])
+def docs_reject(doc_id: str, body: ReviewIn):
+    try:
+        ev = S.assistant.registry.reject(doc_id, body.reviewer, body.note)
+    except GovernanceError as e:
+        raise HTTPException(422, str(e)) from e
+    S.assistant.logger.log(ev.pop("type"), **ev)
+    S.metrics.inc("mcaa_documents_total", action="rejected")
+    return S.assistant.registry.listing()
+
+
+@app.get("/api/analytics", dependencies=[Depends(require_admin)])
+def analytics():
+    a = S.assistant
+    out = summarize(a.logger.events())
+    out["live"] = {"context": a.context.current.state, "har_ms_p50": S.metrics.quantile("mcaa_har_inference_ms", 0.5),
+                   "scenario": a.scenario.name, "condition": a.condition}
+    return out
 
 
 @app.post("/api/touch")
@@ -226,20 +346,20 @@ def schedule(pid: str):
         raise HTTPException(422, str(e)) from e
 
 
-@app.get("/api/study/export")
+@app.get("/api/study/export", dependencies=[Depends(require_admin)])
 def export(fmt: str = "csv"):
     out = Path(os.environ.get("MCAA_EXPORT_DIR", "results/study/export"))
     paths = S.assistant.logger.export(out, fmt)
     return {"files": [str(p) for p in paths]}
 
 
-@app.get("/api/log")
+@app.get("/api/log", dependencies=[Depends(require_admin)])
 def events(type: str | None = None, limit: int = 50):
     df = S.assistant.logger.events(type)
     return df.tail(limit).to_dict(orient="records")
 
 
-@app.delete("/api/study/participant/{pid}")
+@app.delete("/api/study/participant/{pid}", dependencies=[Depends(require_admin)])
 def delete_participant(pid: str):
     validate_pid(pid)
     return {"deleted_events": S.assistant.logger.delete_participant(pid)}

@@ -76,6 +76,30 @@ def eval_rag(gold: dict) -> dict:
     return out
 
 
+def eval_followups(gold: dict) -> dict:
+    """Two-turn conversations with and without conversation memory."""
+    from .rag.dialogue import ConversationMemory
+
+    out = {"n": 0, "with_memory": 0, "without_memory": 0, "failures": []}
+    for scn, convs in gold.get("followups", {}).items():
+        p = _pipeline(scn)
+        for c in convs:
+            out["n"] += 1
+            for mode in ("with_memory", "without_memory"):
+                mem = ConversationMemory()
+                first = p.ask(c["first"])
+                mem.add(c["first"], c["first"], first.refused)
+                res = mem.resolve(c["followup"]) if mode == "with_memory" else None
+                a = p.ask(res.retrieval_query, focus=c["followup"] if res.expanded else None) if res else p.ask(c["followup"])
+                ok = a.refused if c.get("refuse") else (not a.refused and c["fact"].lower() in a.answer.lower())
+                out[mode] += ok
+                if mode == "with_memory" and not ok:
+                    out["failures"].append(c["followup"])
+    out["accuracy_with_memory"] = out["with_memory"] / max(1, out["n"])
+    out["accuracy_without_memory"] = out["without_memory"] / max(1, out["n"])
+    return out
+
+
 def eval_security(red: dict) -> dict:
     p = _pipeline("technician")
     det = InjectionDetector()
@@ -254,7 +278,11 @@ def to_markdown(m: dict) -> str:
     for scn in ("technician", "care_worker"):
         x = r[scn]
         lines.append(f"| {scn} | {x['recall_at_1']:.2f} | {x['recall_at_4']:.2f} | {x['answer_accuracy']:.2f} | {x['faithfulness']:.2f} | {x['false_refusal_rate']:.2f} | {x['oos_refusal_rate']:.2f} |")
+    f = m["followups"]
     lines += [
+        "",
+        f"Follow-up questions ({f['n']} two-turn conversations, incl. 2 that must be refused): "
+        f"{f['accuracy_with_memory']:.2f} with conversation memory vs {f['accuracy_without_memory']:.2f} without.",
         "",
         f"Answer latency (extractive generator): p50 {r['latency_ms_p50']:.1f} ms, p95 {r['latency_ms_p95']:.1f} ms.",
         "",
@@ -304,7 +332,8 @@ def run(argv=None) -> dict:
         "sensors": eval_sensors(),
         "har": eval_har(a.quick),
         "context": eval_context(),
-        "rag": eval_rag(gold),
+        "rag": eval_rag({k: v for k, v in gold.items() if k != "followups"}),
+        "followups": eval_followups(gold),
         "security": eval_security(red),
         "policy": eval_policy(gold),
         "asr": eval_asr(),

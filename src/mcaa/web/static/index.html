@@ -18,6 +18,8 @@
     </div>
     <div class="top-right">
       <span id="condition-badge" class="badge" title="Study condition">A · context-aware</span>
+      <a class="navlink" href="dashboard.html">Dashboard</a>
+      <a class="navlink" href="admin.html">Documents</a>
       <button id="researcher-toggle" class="ghost" aria-expanded="false" aria-controls="researcher">Researcher</button>
     </div>
   </header>
@@ -36,12 +38,21 @@
     <!-- conversation -->
     <section class="panel convo" aria-labelledby="answer-h">
       <h2 id="answer-h" class="sr-only">Answer</h2>
+      <div id="briefing" class="briefing" role="status" hidden><span aria-hidden="true">🛡️</span> <b>Step briefing:</b> <span id="briefing-text"></span></div>
       <div id="answer-card" class="answer-card" aria-live="polite" tabindex="0">
         <div id="answer-meta" class="answer-meta">Ask a question by voice or text.</div>
+        <div id="interpreted" class="interpreted" hidden></div>
         <div id="answer-text" class="answer-text"></div>
         <div id="voice-line" class="voice-line" hidden><span aria-hidden="true">🔊</span> <span id="voice-text"></span>
           <button id="stop-voice" class="small danger" aria-label="Stop speaking">Stop</button></div>
-        <button id="show-details" class="small secondary" hidden>Show full answer</button>
+        <div class="answer-actions">
+          <button id="show-details" class="small secondary" hidden>Show full answer</button>
+          <span id="fb" class="fb" hidden>
+            <span class="muted">Helpful?</span>
+            <button class="small secondary" data-fb="1" aria-label="Helpful">👍</button>
+            <button class="small secondary" data-fb="0" aria-label="Not helpful">👎</button>
+          </span>
+        </div>
       </div>
       <div class="ask">
         <button id="ptt" class="ptt" aria-label="Hold to talk">🎙️<span>Hold to talk</span></button>

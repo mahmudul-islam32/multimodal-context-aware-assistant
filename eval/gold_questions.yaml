@@ -44,3 +44,15 @@ care_worker:
     - "What is the visiting time on ward 3?"
     - "Which insulin should a diabetic resident get?"
     - "Can I share the resident's diagnosis with a relative?"
+# Two-turn conversations (v0.2): the follow-up only makes sense with the first question.
+followups:
+  technician:
+    - {first: "What torque do I use for the gland follower bolts?", followup: "What about the coupling guard screws?", fact: "12 Nm"}
+    - {first: "How often do the motor bearings need grease?", followup: "How much for each one?", fact: "15 g"}
+    - {first: "Who may remove my personal lock?", followup: "What if they are not available?", fact: "shift supervisor"}
+    - {first: "What torque do I use for the gland follower bolts?", followup: "And for pump P-205?", refuse: true}
+  care_worker:
+    - {first: "How often should I reposition a resident at night?", followup: "And during the day?", fact: "2 hours"}
+    - {first: "How long should I rub my hands with hand rub?", followup: "And how much do I use?", fact: "3 ml"}
+    - {first: "When must I call the nurse about oxygen saturation?", followup: "What about blood pressure?", fact: "90 mmHg"}
+    - {first: "How many carers are needed with a slide sheet?", followup: "And what is the weather tomorrow?", refuse: true}

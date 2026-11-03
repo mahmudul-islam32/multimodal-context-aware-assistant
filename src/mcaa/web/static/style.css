@@ -75,3 +75,13 @@ ol#steps li .hand { margin-left: auto; font-size: .8rem; color: var(--muted); wh
 .drawer select, .drawer input:not([type=checkbox]) { min-height: 44px; border-radius: 8px; border: 1px solid #334155; background: var(--panel2); color: var(--text); padding: 0 .5rem; }
 .drawer a { color: #93c5fd; }
 body.plain #context-panel { display: none; }
+
+/* v0.2 */
+.navlink { color: var(--muted); text-decoration: none; padding: .55rem .6rem; border-radius: 8px; min-height: 44px; display: inline-flex; align-items: center; }
+.navlink:hover, .navlink:focus-visible { color: var(--text); background: var(--panel2); }
+.briefing { background: color-mix(in srgb, var(--ok) 16%, var(--panel2)); border-left: 4px solid var(--ok); border-radius: 10px; padding: .6rem .8rem; margin-bottom: .8rem; font-size: .95rem; }
+.briefing sup { color: #93c5fd; }
+.interpreted { font-size: .85rem; color: var(--muted); font-style: italic; margin-bottom: .3rem; }
+.answer-actions { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .6rem; flex-wrap: wrap; }
+.fb { display: inline-flex; align-items: center; gap: .3rem; margin-left: auto; }
+.fb button[aria-pressed="true"] { outline: 2px solid var(--primary); }

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Document Governance</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="pages.css">
+</head>
+<body class="page">
+  <header class="top">
+    <div><h1>Document governance</h1><p class="muted">Only approved, versioned documents reach the assistant. Uploads are scanned, reviewed as a diff and approved by a second person.</p></div>
+    <nav class="top-right"><a class="navlink" href="/">Assistant</a><a class="navlink" href="dashboard.html">Dashboard</a><span id="auth-mode" class="badge"></span></nav>
+  </header>
+  <form id="auth-form" class="authbar" hidden><label>Admin token <input id="token" type="password" autocomplete="off"></label><button class="primary">Save</button></form>
+  <div id="auth" class="banner warn" hidden>This server requires an admin token. Enter it above.</div>
+  <div id="msg" class="toast" role="status" hidden></div>
+
+  <main class="pagegrid">
+    <section class="panel">
+      <h2>1 · Upload a document</h2>
+      <form id="upload" class="stack">
+        <label>Markdown file with front matter (doc_id, title, version, source)
+          <input type="file" id="file" accept=".md,text/markdown,text/plain" required></label>
+        <label>Uploaded by <input id="uploader" required placeholder="your name"></label>
+        <button class="primary big">Upload for review</button>
+      </form>
+      <details class="hint"><summary>Template</summary><pre>---
+doc_id: pump-p101-manual
+title: Pump P-101 maintenance manual
+version: "2.2"
+source: Maintenance department
+---
+# Section 4.3 Seal replacement
+...</pre></details>
+    </section>
+
+    <section class="panel span2">
+      <h2>2 · Review queue</h2>
+      <table class="tbl" id="queue"><thead><tr><th>Document</th><th>Version</th><th>Status</th><th>Uploaded</th><th>Scan</th><th></th></tr></thead><tbody></tbody></table>
+      <div id="review" class="review" hidden>
+        <div class="row between"><h3 id="review-title"></h3><span id="review-stats" class="muted"></span></div>
+        <pre id="diff" class="diff" aria-label="Changes"></pre>
+        <form id="decide" class="row">
+          <label>Reviewer <input id="reviewer" required placeholder="not the uploader"></label>
+          <label class="grow">Note <input id="note" placeholder="optional"></label>
+          <button type="submit" class="primary" data-act="approve">Approve &amp; index</button>
+          <button type="submit" class="danger" data-act="reject">Reject</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel span3">
+      <h2>3 · Active index</h2>
+      <table class="tbl" id="active"><thead><tr><th>Document</th><th>Version</th><th>Approved by</th><th>Date</th><th>Chunks</th><th>Checksum</th></tr></thead><tbody></tbody></table>
+      <p class="muted" id="retired"></p>
+    </section>
+  </main>
+<script src="common.js"></script>
+<script>
+let current = null, act = "approve";
+const statusBadge = (s) => `<span class="pill ${s}">${s}</span>`;
+function toast(text, bad) { const m = $("#msg"); m.textContent = text; m.className = "toast" + (bad ? " bad" : ""); m.hidden = false; clearTimeout(m._t); m._t = setTimeout(() => (m.hidden = true), 5000); }
+async function load() {
+  const d = await adminFetch("/api/docs");
+  $("#queue tbody").innerHTML = d.queue.length ? d.queue.map((p) => `<tr>
+      <td><b>${esc(p.title)}</b><br><code>${esc(p.doc_id)}</code></td><td>${esc(p.version)}</td><td>${statusBadge(p.status)}${p.decided_by ? `<br><small class="muted">by ${esc(p.decided_by)}</small>` : ""}</td>
+      <td>${esc(p.uploaded_by)}<br><small class="muted">${esc(p.uploaded_at.replace("T", " "))}</small></td>
+      <td>${p.findings.length ? `<span class="warn-text">⚠ ${esc(p.findings.join("; "))}</span>` : "clean"}</td>
+      <td><button class="small" data-review="${esc(p.doc_id)}">Review</button></td></tr>`).join("")
+    : '<tr><td colspan="6" class="muted">No uploads yet.</td></tr>';
+  $("#active tbody").innerHTML = d.active.map((a) => `<tr><td><b>${esc(a.title)}</b><br><code>${esc(a.doc_id)}</code></td><td>${esc(a.version)}</td><td>${esc(a.approved_by)}</td><td>${esc(a.approved_on)}</td><td>${a.chunks}</td><td><code>${esc(a.checksum)}</code></td></tr>`).join("");
+  $("#retired").textContent = d.retired.length ? `Retired versions (no longer retrievable): ${d.retired.join(", ")}` : "";
+}
+async function review(id) {
+  const d = await adminFetch(`/api/docs/${encodeURIComponent(id)}/diff`);
+  current = id;
+  $("#review").hidden = false;
+  $("#review-title").textContent = `${id}: ${d.from ? "v" + d.from + " → " : "new, "}v${d.to}`;
+  $("#review-stats").textContent = `+${d.added} / −${d.removed} lines`;
+  $("#diff").innerHTML = d.diff.split("\n").map((l) => `<span class="${l.startsWith("+") && !l.startsWith("+++") ? "add" : l.startsWith("-") && !l.startsWith("---") ? "del" : l.startsWith("@@") ? "hunk" : ""}">${esc(l)}</span>`).join("\n");
+  $("#review").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+$("#queue").addEventListener("click", (e) => { const b = e.target.closest("[data-review]"); if (b) review(b.dataset.review).catch((err) => toast(err.message, true)); });
+$("#decide").addEventListener("click", (e) => { const b = e.target.closest("[data-act]"); if (b) act = b.dataset.act; });
+$("#decide").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await adminFetch(`/api/docs/${encodeURIComponent(current)}/${act}`, { method: "POST", json: { reviewer: $("#reviewer").value, note: $("#note").value } });
+    toast(act === "approve" ? `${current} approved and indexed. The assistant can cite it now.` : `${current} rejected.`);
+    $("#review").hidden = true; load();
+  } catch (err) { toast(err.message, true); }
+});
+$("#upload").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(); fd.append("file", $("#file").files[0]); fd.append("uploaded_by", $("#uploader").value);
+  try {
+    const p = await adminFetch("/api/docs/upload", { method: "POST", body: fd });
+    toast(p.status === "quarantined" ? `${p.doc_id} quarantined: instruction-like text found.` : `${p.doc_id} v${p.version} uploaded, waiting for review.`, p.status === "quarantined");
+    await load(); review(p.doc_id);
+  } catch (err) { toast(err.message, true); }
+});
+initAuth(load);
+load().catch((err) => toast(err.message, true));
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -41,8 +42,11 @@ def model_factory(kind: str, seed: int = 0):
     raise ValueError(kind)
 
 
+@lru_cache(maxsize=2)
 def train_default_model(seed: int = 0) -> FeatureModel:
-    """Model used by the live API: trained on synthetic data incl. WORKING."""
+    """Model used by the live API: trained on synthetic data incl. WORKING.
+
+    Cached per process: switching scenarios does not retrain."""
     X, y, _ = make_dataset(n_subjects=8, seconds_per_activity=30, activities=ACTIVITIES, seed=seed)
     return FeatureModel(n_estimators=120, seed=seed).fit(X, y)
 

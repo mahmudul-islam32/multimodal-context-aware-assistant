@@ -44,6 +44,7 @@ class Scenario(BaseModel):
     context_config: str = "context.yaml"
     policy_config: str = "policy.yaml"
     language: str = "en"
+    proactive_briefings: bool = True  # speak the key safety line when a step starts
 
     @model_validator(mode="after")
     def _driver_warning(self):

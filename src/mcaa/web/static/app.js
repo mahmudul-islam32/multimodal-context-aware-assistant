@@ -6,6 +6,7 @@ const api = (path, body, method) =>
 
 let S = null;            // last server snapshot
 let lastFull = "";       // full answer for "show details"
+let lastAnswerId = null;
 const ACTS = ["WALKING", "WALKING_UPSTAIRS", "WALKING_DOWNSTAIRS", "SITTING", "STANDING", "LAYING", "WORKING"];
 
 // ---------------------------------------------------------------- render
@@ -44,6 +45,11 @@ const withSups = (t) => esc(t).replace(/\s*\[(\d+)\]/g, '<sup data-n="$1">[$1]</
 
 function showAnswer(res, query) {
   const { answer: a, plan: p } = res;
+  lastAnswerId = res.answer_id;
+  const fb = $("#fb"); fb.hidden = !res.answer_id; fb.querySelectorAll("button").forEach((b) => { b.disabled = false; b.removeAttribute("aria-pressed"); });
+  const it = $("#interpreted");
+  it.hidden = !res.interpreted_as;
+  it.textContent = res.interpreted_as ? `Follow-up, interpreted as: “${res.interpreted_as}”` : "";
   const card = $("#answer-card");
   card.classList.toggle("refused", a.refused);
   card.classList.remove("cue"); void card.offsetWidth;
@@ -66,6 +72,15 @@ function showAnswer(res, query) {
   h.innerHTML = `<div class="q">Q: ${esc(query)}</div><div class="a">${withSups(a.short_answer)}</div>`;
   $("#history").prepend(h);
 }
+
+function showBriefing(s) {
+  const b = s && s.briefing, el = $("#briefing");
+  if (!b) { el.hidden = true; return; }
+  $("#briefing-text").innerHTML = withSups(b.text);
+  el.hidden = false;
+  if (b.plan.speak) speak(b.plan.voice_text);
+}
+const stepTo = (i) => api("/api/task/step", { index: i }).then((s) => { render(s); showBriefing(s); });
 
 // ---------------------------------------------------------------- voice out (F-14)
 function speak(text) {
@@ -162,15 +177,23 @@ ptt.addEventListener("pointerdown", pttStart); ptt.addEventListener("pointerup",
 $("#stop-voice").addEventListener("click", () => { bargeIn(); api("/api/touch", {}); });
 $("#answer-card").addEventListener("click", bargeIn);
 $("#show-details").addEventListener("click", () => { $("#answer-text").innerHTML = withSups(lastFull); $("#show-details").hidden = true; });
-$("#steps").addEventListener("click", (e) => { const li = e.target.closest("li"); if (li) api("/api/task/step", { index: +li.dataset.i }).then(render); });
-$("#next-step").addEventListener("click", () => api("/api/task/step", { index: S.task.step + 1 }).then(render));
-$("#prev-step").addEventListener("click", () => api("/api/task/step", { index: S.task.step - 1 }).then(render));
+$("#steps").addEventListener("click", (e) => { const li = e.target.closest("li"); if (li) stepTo(+li.dataset.i); });
+$("#next-step").addEventListener("click", () => stepTo(S.task.step + 1));
+$("#prev-step").addEventListener("click", () => stepTo(S.task.step - 1));
+$("#fb").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-fb]"); if (!b || !lastAnswerId) return;
+  api("/api/feedback", { answer_id: lastAnswerId, helpful: b.dataset.fb === "1" }).then(() => {
+    $("#fb").querySelectorAll("button").forEach((x) => { x.disabled = true; });
+    b.setAttribute("aria-pressed", "true");
+  });
+});
 document.querySelectorAll("[data-ov]").forEach((b) => b.addEventListener("click", () => api("/api/context/override", { state: b.dataset.ov || null }).then(() => api("/api/state").then(render))));
 $("#researcher-toggle").addEventListener("click", (e) => { const d = $("#researcher"); d.hidden = !d.hidden; e.target.setAttribute("aria-expanded", String(!d.hidden)); });
 $("#start-task").addEventListener("click", async () => {
   const pid = $("#pid").value.trim() || null;
   if (pid) { const sch = await api(`/api/study/schedule/${pid}`); $("#schedule").textContent = "Counterbalanced schedule: " + sch.blocks.map((b) => `block ${b.block}: condition ${b.condition}, task set ${b.task_set}`).join(" · "); }
-  render(await api("/api/task/start", { task_set: $("#tset").value, condition: $("#cond").value, participant: pid }));
+  const st = await api("/api/task/start", { task_set: $("#tset").value, condition: $("#cond").value, participant: pid });
+  render(st); showBriefing(st);
   $("#history").innerHTML = "";
 });
 $("#complete-task").addEventListener("click", () => api("/api/task/complete", {}).then(render));

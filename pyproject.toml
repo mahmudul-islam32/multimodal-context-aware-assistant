@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcaa"
-version = "0.1.0"
+version = "0.2.0"
 description = "Multimodal context-aware assistant: sensor-based context, speech and verified-docs RAG with refusal"
 readme = "README.md"
 requires-python = ">=3.11"
