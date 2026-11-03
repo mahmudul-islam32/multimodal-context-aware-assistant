@@ -20,6 +20,8 @@ dependencies = [
   "fastapi>=0.110",
   "uvicorn[standard]>=0.27",
   "httpx>=0.27",
+  "python-multipart>=0.0.9",  # FastAPI form/file uploads (push-to-talk audio)
+  "pillow>=10.0",              # camera frame decoding
 ]
 
 [project.optional-dependencies]
