@@ -18,7 +18,23 @@ Rules for any AI coding agent (or automation) working in this repository.
 
 ## Git: branches and pushing
 
-- Work on a feature branch; never push directly to `main`.
+- Work on a branch; never push directly to `main`.
+- Branch names are `<type>/<short-kebab-description>`, lowercase, using only
+  `a-z`, `0-9`, `-`, `.` and one `/`:
+
+  | Type | Use for | Example |
+  |---|---|---|
+  | `feature/` | new functionality | `feature/document-governance` |
+  | `fix/` | bug fixes | `fix/ci-missing-dependencies` |
+  | `docs/` | documentation only | `docs/readme-screenshots` |
+  | `refactor/` | restructuring without behaviour change | `refactor/rag-pipeline` |
+  | `test/` | tests only | `test/api-auth` |
+  | `chore/` | build, CI, dependencies, tooling | `chore/update-ci` |
+  | `release/` | release preparation | `release/v0.2.0` |
+
+- Branch names must not contain tool, agent or vendor names (e.g. no `claude/...`,
+  no session IDs or random suffixes). Name the branch after the change.
+- Delete a branch after its pull request is merged.
 - Never force-push, rewrite or rebase history that has already been pushed
   unless the repository owner explicitly asks for it.
 - Push with `git push -u origin <branch>`.
