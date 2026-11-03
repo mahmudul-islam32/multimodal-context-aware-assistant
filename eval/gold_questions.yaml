@@ -1,0 +1,46 @@
+# Gold question set (F-15). expect: doc_id + section prefix that must be retrieved,
+# and a key fact that must appear in the answer. Out-of-scope items must be refused.
+technician:
+  in_scope:
+    - {q: "What torque do I use for the gland follower bolts?", doc: pump-p101-manual, section: "Section 4.3", fact: "25 Nm"}
+    - {q: "How much may a new seal drip after restart?", doc: pump-p101-manual, section: "Section 5", fact: "5 drops"}
+    - {q: "How often do the motor bearings need grease?", doc: pump-p101-manual, section: "Section 6", fact: "2000"}
+    - {q: "How much grease per bearing?", doc: pump-p101-manual, section: "Section 6", fact: "15 g"}
+    - {q: "What is the maximum coupling offset?", doc: pump-p101-manual, section: "Section 4.4", fact: "0.1 mm"}
+    - {q: "What torque for the coupling guard screws?", doc: pump-p101-manual, section: "Section 4.4", fact: "12 Nm"}
+    - {q: "When do I have to replace the shaft sleeve?", doc: pump-p101-manual, section: "Section 4.2", fact: "0.2 mm"}
+    - {q: "Which seal kit do I need?", doc: pump-p101-manual, section: "Section 3", fact: "SK-101-B"}
+    - {q: "What does gravel noise in the casing mean?", doc: pump-p101-manual, section: "Section 7", fact: "cavitation"}
+    - {q: "What should I do if the pump vibrates?", doc: pump-p101-manual, section: "Section 7", fact: "alignment"}
+    - {q: "How do I verify zero energy?", doc: loto-01, section: "Section 3", fact: "start"}
+    - {q: "Who may remove my personal lock?", doc: loto-01, section: "Section 4", fact: "Only the person"}
+    - {q: "What happens if I lose my lock key?", doc: loto-01, section: "Section 5", fact: "supervisor"}
+    - {q: "Which valve do I open to drain the casing?", doc: pump-p101-manual, section: "Section 2", fact: "V-13"}
+    - {q: "In which order do I open the valves at restart?", doc: pump-p101-manual, section: "Section 5", fact: "V-11"}
+  out_of_scope:
+    - "How do I replace the impeller on pump P-205?"
+    - "What's the weather forecast for tomorrow?"
+    - "What is the torque for the cylinder head of a car engine?"
+    - "Can you recommend a good restaurant near the plant?"
+    - "How do I calibrate the flow meter FT-330?"
+    - "Who won the football match yesterday?"
+    - "How do I program the PLC of conveyor C-9?"
+    - "What is the share price of the company?"
+care_worker:
+  in_scope:
+    - {q: "How long should I rub my hands with hand rub?", doc: care-hh-02, section: "Section 2", fact: "30 seconds"}
+    - {q: "How much hand rub do I use?", doc: care-hh-02, section: "Section 2", fact: "3 ml"}
+    - {q: "Does alcohol rub work against norovirus?", doc: care-hh-02, section: "Section 3", fact: "not reliable"}
+    - {q: "Do gloves replace hand hygiene?", doc: care-hh-02, section: "Section 4", fact: "do not replace"}
+    - {q: "How often should I reposition a resident at night?", doc: care-rp-05, section: "Section 1", fact: "4 hours"}
+    - {q: "How many carers are needed with a slide sheet?", doc: care-rp-05, section: "Section 2", fact: "two carers"}
+    - {q: "Where do I put the pillows for the 30 degree tilt?", doc: care-rp-05, section: "Section 3", fact: "knees"}
+    - {q: "What do I do if redness does not fade?", doc: care-rp-05, section: "Section 4", fact: "nurse in charge"}
+    - {q: "When must I call the nurse about oxygen saturation?", doc: care-vs-01, section: "Section 2", fact: "92"}
+    - {q: "How long do I count breaths for the respiratory rate?", doc: care-vs-01, section: "Section 3", fact: "60 seconds"}
+  out_of_scope:
+    - "What dose of paracetamol can I give a resident?"
+    - "How do I insert a urinary catheter?"
+    - "What is the visiting time on ward 3?"
+    - "Which insulin should a diabetic resident get?"
+    - "Can I share the resident's diagnosis with a relative?"

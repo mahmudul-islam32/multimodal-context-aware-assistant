@@ -1,0 +1,36 @@
+# F-09 adaptive output policy (versioned; version is logged with every answer).
+version: policy-v1
+states:
+  IDLE:
+    modality: screen
+    voice: optional
+    max_voice_words: 40
+    screen_detail: full
+    citations: full
+  HANDS_BUSY:
+    modality: voice_first
+    voice: required
+    max_voice_words: 25
+    screen_detail: summary
+    citations: short
+  MOVING:
+    modality: voice_first
+    voice: required
+    max_voice_words: 15
+    screen_detail: summary
+    citations: short
+    defer_details: true
+  NOISY:
+    modality: screen_first
+    voice: "off"
+    max_voice_words: 0
+    screen_detail: full
+    citations: full
+    visual_cue: true
+# Condition B of the user study: same pipeline, no adaptation.
+plain_chatbot:
+  modality: screen
+  voice: "off"
+  max_voice_words: 0
+  screen_detail: full
+  citations: full

@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcaa"
+version = "0.1.0"
+description = "Multimodal context-aware assistant: sensor-based context, speech and verified-docs RAG with refusal"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Mahmudul Islam" }]
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "pandas>=2.0",
+  "scikit-learn>=1.3",
+  "pyyaml>=6.0",
+  "pydantic>=2.5",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+torch = ["torch>=2.1"]
+speech = ["faster-whisper>=1.0", "soundfile>=0.12"]
+export = ["pyarrow>=14"]
+viz = ["matplotlib>=3.8", "imageio>=2.33", "playwright>=1.40"]
+dev = ["pytest>=8", "ruff>=0.4", "pyarrow>=14", "matplotlib>=3.8", "imageio>=2.33"]
+
+[project.scripts]
+mcaa-api = "mcaa.api.app:main"
+mcaa-eval = "mcaa.evaluation:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mcaa = ["web/static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B008"]

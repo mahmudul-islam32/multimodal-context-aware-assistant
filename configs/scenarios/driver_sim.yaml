@@ -1,0 +1,24 @@
+id: driver_sim
+name: Driver - SIMULATOR ONLY
+description: Lab driving simulator. Voice-only answers while driving.
+simulator_only: true
+warning: "SIMULATOR ONLY - not for use in real vehicles or on public roads."
+documents_dir: data/docs/driver_sim
+escalation:
+  name: the simulator operator
+  contact: console intercom
+task_sets:
+  A:
+    id: drive
+    title: Simulated drive with warnings
+    steps:
+      - {id: d1, text: "Start the simulated drive", manual: true}
+      - {id: d2, text: "React to the tyre warning", manual: true, doc_hint: tyre warning}
+      - {id: d3, text: "End the session", manual: false, doc_hint: end session}
+  B:
+    id: drive2
+    title: Simulated drive with assistance systems
+    steps:
+      - {id: e1, text: "Enable lane keeping assist", manual: true, doc_hint: lane keeping}
+      - {id: e2, text: "React to the temperature warning", manual: true, doc_hint: temperature warning}
+      - {id: e3, text: "End the session", manual: false, doc_hint: end session}
