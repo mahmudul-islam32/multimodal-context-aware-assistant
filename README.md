@@ -1,7 +1,7 @@
 # Multimodal Context-Aware Assistant
 
-![status](https://img.shields.io/badge/status-v0.1%20prototype-blue)
-![tests](https://img.shields.io/badge/tests-42%20passing-brightgreen)
+![status](https://img.shields.io/badge/status-v0.2-blue)
+![tests](https://img.shields.io/badge/tests-61%20passing-brightgreen)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![python](https://img.shields.io/badge/python-3.11%2B-informational)
 
@@ -11,7 +11,7 @@ A Python research prototype of an assistant that gives **safe, short, situation-
 
 <sub>Demo recorded headless with Playwright against the real backend; the IMU stream comes from the built-in sensor simulator. [Full-resolution MP4](docs/assets/ui_demo.mp4).</sub>
 
-> **Status: v0.1, all 16 features in [FEATURES.md](docs/FEATURES.md) are implemented and tested.**
+> **Status: v0.2.** All 16 features in [FEATURES.md](docs/FEATURES.md) are implemented and tested. v0.2 adds follow-up questions, proactive safety briefings, a document approval workflow, an analytics dashboard, answer feedback and ops endpoints ([changelog](CHANGELOG.md)).
 > Things that are **not** done yet, so the numbers below should be read with them in mind:
 > - The public HAR datasets (UCI HAR, WISDM) could not be downloaded in the build environment. Loaders and a download script are included, but **every HAR number here is from the built-in synthetic IMU generator**.
 > - Whisper ASR and the LLM generator are implemented but were not run against real models here (no model downloads available). The default generator is extractive and offline. ASR word error rate needs recordings from the target setting.
@@ -23,6 +23,7 @@ A Python research prototype of an assistant that gives **safe, short, situation-
 
 - [What it does](#what-it-does)
 - [The UI](#the-ui)
+- [Operating it: governance, analytics, ops](#operating-it-governance-analytics-ops)
 - [How it works](#how-it-works)
 - [Results (offline evaluation)](#results-offline-evaluation)
 - [Quick start](#quick-start)
@@ -41,6 +42,8 @@ A Python research prototype of an assistant that gives **safe, short, situation-
 | `NOISY`: loud environment or poor speech recognition | **Screen first** with a flashing visual cue, no voice |
 | Out of scope, conflicting sources, unknown part number | *"I can't confirm this from the approved documents … Please ask the shift supervisor (ext. 4410)."* |
 | Prompt-injection attempt | Blocked before retrieval and logged in the audit log |
+| A new task step starts | A **proactive safety briefing**: the key safety sentence for that step from the approved docs (spoken when hands are busy) |
+| A short follow-up ("And during the day?") | Expanded with the previous question's topic and shown as *"interpreted as …"*, then answered or refused as usual |
 
 The same question, *"What torque do I use for the gland follower bolts?"*, in two contexts:
 
@@ -61,6 +64,40 @@ A tablet PWA (plain HTML/JS, served by FastAPI) with touch targets of at least 4
 | Researcher drawer (study mode, simulator, camera consent, export) | Phone sensor bridge (`/sensor.html`) |
 |---|---|
 | ![study mode](docs/assets/ui_study_mode.png) | <img src="docs/assets/ui_phone_sensor_bridge.png" width="260" alt="phone sensor page"> |
+
+## Operating it: governance, analytics, ops
+
+Beyond the assistant itself, v0.2 adds the parts a team needs to run it: a controlled way to change the knowledge base, visibility into what the assistant does, and standard monitoring.
+
+**Step briefing, follow-up question and feedback.** Opening step 2 brings up the approved instruction for that step. *"How much for each one?"* is interpreted from the previous question, and the user rates the answer.
+
+![briefing, follow-up and feedback](docs/assets/ui_briefing_followup_feedback.png)
+
+**Document governance (`/admin.html`).** New documents and new versions never go straight into the index:
+
+1. The upload is scanned for injected instructions (a hit means quarantine).
+2. The reviewer sees a diff against the active version.
+3. A **second person** must approve. The API rejects self-approval (four-eyes rule).
+4. Approval stamps the approval record, indexes the new version and retires the old one.
+
+The assistant's next answer cites the new version. Every step goes to the audit log.
+
+| Review: injected upload quarantined, new version shown as a sentence-level diff | After approval: the next answer cites v2.2 (28 Nm) |
+|---|---|
+| ![admin review](docs/assets/ui_admin_review.png) | ![answer after approval](docs/assets/ui_after_approval_answer.png) |
+
+**Analytics dashboard (`/dashboard.html`).** A live view of the event log: context-state timeline, answers by context and output modality, refusal reasons, guardrail events (injections, PII redactions, removed ungrounded sentences), most cited documents, latency, feedback, and recent answers with PII redacted. It is built from `GET /api/analytics`, with hand-written SVG charts and no external libraries.
+
+![analytics dashboard](docs/assets/ui_dashboard.png)
+
+**Ops endpoints**
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /metrics` | Prometheus metrics: `mcaa_answers_total{state,outcome}`, `mcaa_answer_latency_ms`, `mcaa_guardrail_events_total{type}`, `mcaa_context_changes_total{to}`, `mcaa_har_inference_ms`, `mcaa_documents_total{action}`, `mcaa_feedback_total` |
+| `GET /api/health` | version, uptime, scenario, generator, index size, policy version, auth mode |
+| `X-Admin-Token` header | required on governance, analytics, export, log and deletion endpoints when `MCAA_ADMIN_TOKEN` is set (dev mode otherwise, shown in the UI) |
+| `GET /docs` | OpenAPI / Swagger UI for every endpoint |
 
 ## How it works
 
@@ -144,8 +181,8 @@ Activity probabilities are smoothed (EMA) and grouped into *idle / moving / hand
 
 | Component | Metric | Result |
 |---|---|---|
-| HAR, features + RF (synthetic, 12 subjects, LOSO) | macro-F1 · latency per live window | **0.974** · 11.4 ms |
-| HAR, 1D-CNN (synthetic, LOSO) | macro-F1 · latency per live window | **0.906** · 0.4 ms |
+| HAR, features + RF (synthetic, 12 subjects, LOSO) | macro-F1 · latency per live window | **0.974** · 8.8 ms |
+| HAR, 1D-CNN (synthetic, LOSO) | macro-F1 · latency per live window | **0.900** · 0.3 ms |
 | HAR calibration (30 s per activity) | task-state accuracy on a new user | 0.86 → **1.00** |
 | Retrieval, technician / care | recall@1 · recall@4 | 0.87 / 1.00 · 1.00 / 1.00 |
 | Answers (25 in-scope gold questions) | key fact present · faithfulness | 1.00 · 1.00 |
@@ -154,6 +191,7 @@ Activity probabilities are smoothed (EMA) and grouped into *idle / moving / hand
 | Guardrail false positives | benign "ignore / system / lockout" queries flagged | 0/4 |
 | PII redaction | recall · precision (5 labelled samples) | 1.00 · 1.00 |
 | Context engine (scripted 115 s session) | state changes for 5 true segments · min gap · agreement | 4 · 15.4 s · 0.86 (the gap is detection lag) |
+| Follow-up questions (8 two-turn conversations) | answered correctly or correctly refused: with memory · without | **8/8** · 6/8 (the 2 must-refuse cases pass either way) |
 | Output policy | voice word-limit violations (60 plans) | 0 |
 | Sensor pipeline | 20→50 Hz resampling max error · drops detected | 0.026 g · 10 and 3 of 10 and 3 |
 | Speech | WER | not measured yet (needs recordings in the target setting) |
@@ -190,7 +228,7 @@ No phone? Open **Researcher → Simulated sensor** and click *working*, *walking
 Other commands:
 
 ```bash
-pytest -q                                           # 42 tests
+pytest -q                                           # 61 tests
 ```
 
 ```bash
@@ -234,6 +272,8 @@ docker compose --profile llm up                     # with Ollama; set MCAA_GENE
 | `MCAA_LLM_BASE_URL` / `MCAA_LLM_MODEL` / `MCAA_LLM_API_KEY` | Ollama on localhost | LLM endpoint |
 | `MCAA_DB` | in memory | SQLite event log path |
 | `MCAA_HAR_MODEL` | `models/har_rf.pkl` | if missing, a model is trained on synthetic data at start-up |
+| `MCAA_ADMIN_TOKEN` | unset (dev mode) | protects the admin endpoints (`X-Admin-Token` header) |
+| `MCAA_RUNTIME_DIR` | `data/runtime` | uploaded and approved documents, kept out of git |
 
 ## Configuration: scenarios, context rules, policy
 
@@ -263,19 +303,21 @@ src/mcaa/
   har/         features.py, models.py (RF, LOSO, calibration), cnn.py (PyTorch), datasets.py, train.py
   speech/      asr.py (faster-whisper / Whisper), vad.py, wer.py, tts.py (Piper, barge-in)
   context/     engine.py (rules, EMA, hysteresis, override)
-  rag/         store.py, retriever.py, generator.py, grounding.py, guardrails.py, pii.py, pipeline.py
+  rag/         store.py, retriever.py, generator.py, grounding.py, guardrails.py, pii.py, pipeline.py,
+               dialogue.py (follow-ups), governance.py (upload, diff, four-eyes approval)
+  ops/         metrics.py (Prometheus), auth.py (admin token)
   policy/      policy.py
   vision/      camera.py (consent-gated, never stores frames)
-  study/       conditions.py (counterbalancing), logger.py (SQLite, export, deletion)
+  study/       conditions.py (counterbalancing), logger.py (SQLite, export, deletion), analytics.py
   api/app.py   FastAPI: REST + /ws/ui + /ws/sensors + static PWA
-  web/static/  index.html, app.js, style.css, sensor.html, manifest, service worker
+  web/static/  index.html, app.js, dashboard.html, admin.html, sensor.html, styles, manifest, service worker
   assistant.py orchestrator    evaluation.py  offline harness (mcaa-eval)
 configs/       scenarios/*.yaml, context.yaml, policy.yaml, har.yaml
 data/docs/     approved sample documents per scenario (+ inbox/ with rejected and quarantined examples)
 eval/          gold_questions.yaml, redteam.yaml, analysis/analyze_study.py
 scripts/       make_figures.py, record_demo.py
 results/       REPORT.md, metrics.json
-tests/         42 tests, including API and WebSocket tests
+tests/         61 tests, including API, WebSocket, governance and auth tests
 ```
 
 ## Feature status
@@ -298,6 +340,11 @@ tests/         42 tests, including API and WebSocket tests
 | F-14 | Text-to-speech with barge-in | ✅ | `speech/tts.py`, browser TTS |
 | F-15 | Offline evaluation harness | ✅ | `evaluation.py`, CI |
 | F-16 | Camera context (optional) | ✅ heuristic cue | `vision/camera.py` |
+| v0.2 | Follow-up questions | ✅ | `rag/dialogue.py` |
+| v0.2 | Proactive step briefings | ✅ | `Assistant.briefing` |
+| v0.2 | Document governance (four-eyes) | ✅ | `rag/governance.py`, `admin.html` |
+| v0.2 | Analytics dashboard, feedback | ✅ | `study/analytics.py`, `dashboard.html` |
+| v0.2 | Prometheus metrics, admin auth | ✅ | `ops/` |
 
 More documentation: [Features](docs/FEATURES.md) · [Architecture](docs/ARCHITECTURE.md) · [Evaluation and user study](docs/EVALUATION.md) · [Reporting](docs/REPORTING.md) · [HAR model card](docs/MODEL_CARD.md) · [Scenario guide](docs/SCENARIOS.md) · [Safety case](docs/SAFETY_CASE.md) · [Changelog](CHANGELOG.md)
 

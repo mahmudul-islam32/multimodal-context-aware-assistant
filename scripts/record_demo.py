@@ -104,9 +104,7 @@ def main():
             page.click("#researcher-toggle")
             page.wait_for_timeout(300)
             page.locator("#researcher").screenshot(path=OUT / "ui_study_mode.png")
-            ctx.close()
-            # ---------------- v0.2: briefing + follow-up + feedback
-            page.click("#researcher-toggle")
+            # ---------------- v0.2: briefing + follow-up + feedback (drawer is open here)
             page.select_option("#cond", "A")
             page.select_option("#tset", "A")
             page.fill("#pid", "")
@@ -141,6 +139,7 @@ def main():
             dash.wait_for_selector(".kpi")
             dash.wait_for_timeout(1500)
             dash.screenshot(path=OUT / "ui_dashboard.png", full_page=True)
+            ctx.close()
             # phone sensor page
             phone = browser.new_context(**pw.devices["Pixel 7"])
             pg = phone.new_page()
@@ -197,11 +196,17 @@ def main():
             adm.wait_for_selector("#diff .add")
             adm.fill("#reviewer", "K. Weber")
             adm.fill("#note", "New seal supplier, torque per vendor sheet")
-            adm.wait_for_timeout(600)
+            adm.evaluate("document.querySelector('#msg').hidden = true")
             adm.screenshot(path=OUT / "ui_admin_review.png", full_page=True)
             adm.click("[data-act='approve']")
             adm.wait_for_timeout(1200)
             adm.screenshot(path=OUT / "ui_admin_approved.png", full_page=True)
+            # the assistant now cites the new version
+            pg2 = ctx2.new_page()
+            pg2.goto(BASE)
+            pg2.wait_for_selector("#steps li")
+            ask(pg2, "What torque do I use for the gland follower bolts?")
+            pg2.screenshot(path=OUT / "ui_after_approval_answer.png")
 
             ctx2.close()
             browser.close()

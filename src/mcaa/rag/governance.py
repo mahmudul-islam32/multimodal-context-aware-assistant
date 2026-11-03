@@ -134,7 +134,7 @@ class DocumentRegistry:
         active = self.store.documents.get(doc_id)
         old = active.body if active and p.status != "approved" else ""
         lines = list(difflib.unified_diff(
-            old.splitlines(), p.body.splitlines(),
+            _sentence_lines(old), _sentence_lines(p.body),
             fromfile=f"{doc_id}@{active.version}" if active else "(new document)",
             tofile=f"{doc_id}@{p.version}", lineterm="", n=1,
         ))
@@ -157,6 +157,14 @@ class DocumentRegistry:
         if doc_id not in self.pending:
             raise GovernanceError(f"no uploaded document '{doc_id}'")
         return self.pending[doc_id]
+
+
+def _sentence_lines(text: str) -> list[str]:
+    """One sentence per line, so a changed number shows as one changed sentence."""
+    out: list[str] = []
+    for line in text.splitlines():
+        out += re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])", line) if line.strip() else [line]
+    return out
 
 
 def _now() -> str:

@@ -9,8 +9,8 @@ Generated 2026-11-03 on x86_64 / Linux. Quick mode: False. Seed: 42.
 
 | Model | Macro-F1 | Fold std | Latency / window (ms) |
 |---|---|---|---|
-| Features + random forest | 0.974 | 0.022 | 11.4 |
-| 1D-CNN (PyTorch) | 0.906 | 0.033 | 0.4 |
+| Features + random forest | 0.974 | 0.022 | 8.8 |
+| 1D-CNN (PyTorch) | 0.900 | 0.034 | 0.3 |
 
 Calibration (new class WORKING learned from a short recording): task-state accuracy 0.86 → 1.00.
 
@@ -21,7 +21,9 @@ Calibration (new class WORKING learned from a short recording): task-state accur
 | technician | 0.87 | 1.00 | 1.00 | 1.00 | 0.00 | 1.00 |
 | care_worker | 1.00 | 1.00 | 1.00 | 1.00 | 0.00 | 1.00 |
 
-Answer latency (extractive generator): p50 1.2 ms, p95 1.7 ms.
+Follow-up questions (8 two-turn conversations, incl. 2 that must be refused): 1.00 with conversation memory vs 0.75 without.
+
+Answer latency (extractive generator): p50 1.4 ms, p95 1.8 ms.
 
 ## Security and privacy
 

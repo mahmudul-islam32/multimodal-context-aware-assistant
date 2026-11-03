@@ -189,3 +189,20 @@ def test_api_governance_flow_changes_answers(client):
 def test_pages_served(client):
     for page in ("/admin.html", "/dashboard.html", "/dashboard.js", "/common.js"):
         assert client.get(page).status_code == 200
+
+
+def test_followup_logged_with_user_words(care):
+    care.ask("How often should I reposition a resident at night?")
+    care.ask("And during the day?")
+    s = summarize(care.logger.events())
+    assert s["recent"][0]["query"] == "And during the day?" and s["recent"][0]["followup"]
+
+
+def test_diff_is_sentence_level(tmp_path):
+    st, reg = _registry(tmp_path)
+    body = st.documents["pump-p101-manual"].body.replace("to 25 Nm in a cross pattern", "to 28 Nm in a cross pattern")
+    raw = '---\ndoc_id: pump-p101-manual\ntitle: Pump P-101 maintenance manual\nversion: "2.2"\nsource: test\n---\n' + body
+    reg.upload(raw, "alice")
+    d = reg.diff("pump-p101-manual")
+    assert (d["added"], d["removed"]) == (1, 1)
+    assert "+Tighten the gland follower bolts to 28 Nm in a cross pattern." in d["diff"]

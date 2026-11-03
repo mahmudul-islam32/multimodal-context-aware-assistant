@@ -20,12 +20,12 @@ function kpis(k) {
 function hbars(el, data, colorOf = () => SERIES) {
   const entries = Object.entries(data).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
   if (!entries.length) { el.innerHTML = '<p class="empty">No data yet.</p>'; return; }
-  const W = 360, row = 26, lw = 128, max = Math.max(...entries.map((e) => e[1]));
+  const W = 380, row = 26, lw = 158, max = Math.max(...entries.map((e) => e[1]));
   const H = entries.length * row;
   const bars = entries.map(([k, v], i) => {
     const w = Math.max(2, ((W - lw - 40) * v) / max), y = i * row;
     return `<g><title>${esc(label(k))}: ${v}</title>
-      <text x="${lw - 8}" y="${y + 16}" text-anchor="end">${esc(label(k)).slice(0, 22)}</text>
+      <text x="${lw - 8}" y="${y + 16}" text-anchor="end">${esc(label(k)).slice(0, 28)}</text>
       <rect x="${lw}" y="${y + 5}" width="${w}" height="16" rx="4" fill="${colorOf(k)}"></rect>
       <text class="val" x="${lw + w + 6}" y="${y + 17}">${v}</text></g>`;
   }).join("");

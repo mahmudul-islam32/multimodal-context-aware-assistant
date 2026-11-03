@@ -21,6 +21,7 @@ from .rag import DocumentStore, RAGPipeline
 from .rag.dialogue import ConversationMemory
 from .rag.generator import get_generator
 from .rag.governance import DocumentRegistry
+from .rag.pii import redact
 from .sensors import StreamBuffer
 from .speech.tts import is_barge_in_command
 from .study import EventLogger, schedule_for
@@ -219,8 +220,9 @@ class Assistant:
         self.logger.log("query", query=text, source=source, state=ctx.state, step=step.id)
         res = self.memory.resolve(text)
         ans = self.rag.ask(res.retrieval_query, step_hint=step.doc_hint or "", focus=text if res.expanded else None)
-        if res.expanded:
+        if res.expanded:  # log and show the user's own words, not the weighted retrieval string
             ans.query = text
+            ans.redacted_query = redact(text)[0]
         self.memory.add(text, res.display, ans.refused)
         answer_id = uuid.uuid4().hex[:12]
         interpreted = res.display if res.expanded else None

@@ -4,7 +4,7 @@
     "date": "2026-11-03",
     "machine": "x86_64 / Linux",
     "quick": false,
-    "runtime_s": 95.3
+    "runtime_s": 97.2
   },
   "sensors": {
     "resample_20_to_50hz_max_abs_err": 0.026405455299333802,
@@ -35,7 +35,7 @@
         "WALKING_UPSTAIRS": 0.9939,
         "WORKING": 1.0
       },
-      "latency_ms_per_window": 3.731,
+      "latency_ms_per_window": 4.079,
       "labels": [
         "LAYING",
         "SITTING",
@@ -110,23 +110,23 @@
           408
         ]
       ],
-      "single_window_latency_ms": 11.405707800004166
+      "single_window_latency_ms": 8.770515940000223
     },
     "cnn": {
       "model": "1d_cnn",
-      "macro_f1": 0.9058,
-      "macro_f1_fold_mean": 0.9045,
-      "macro_f1_fold_std": 0.0331,
+      "macro_f1": 0.8999,
+      "macro_f1_fold_mean": 0.8991,
+      "macro_f1_fold_std": 0.0344,
       "per_class_f1": {
         "LAYING": 1.0,
         "SITTING": 0.9167,
         "STANDING": 0.9167,
-        "WALKING": 0.7558,
+        "WALKING": 0.7395,
         "WALKING_DOWNSTAIRS": 0.8368,
-        "WALKING_UPSTAIRS": 0.9144,
+        "WALKING_UPSTAIRS": 0.89,
         "WORKING": 1.0
       },
-      "latency_ms_per_window": 0.033,
+      "latency_ms_per_window": 0.059,
       "labels": [
         "LAYING",
         "SITTING",
@@ -186,9 +186,9 @@
           0,
           0,
           0,
-          34,
+          52,
           0,
-          374,
+          356,
           0
         ],
         [
@@ -201,7 +201,7 @@
           408
         ]
       ],
-      "single_window_latency_ms": 0.3947736800000712
+      "single_window_latency_ms": 0.25945794000108435
     },
     "calibration": {
       "task_state_accuracy_before": 0.8571428571428571,
@@ -512,8 +512,16 @@
       "oos_refusal_rate": 1.0,
       "failures": []
     },
-    "latency_ms_p50": 1.2,
-    "latency_ms_p95": 1.738
+    "latency_ms_p50": 1.39,
+    "latency_ms_p95": 1.768
+  },
+  "followups": {
+    "n": 8,
+    "with_memory": 8,
+    "without_memory": 6,
+    "failures": [],
+    "accuracy_with_memory": 1.0,
+    "accuracy_without_memory": 0.75
   },
   "security": {
     "direct_attacks": 12,

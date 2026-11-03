@@ -18,8 +18,8 @@
 
 | Model | Macro-F1 | Fold std | Latency per live window |
 |---|---|---|---|
-| Features + RF | 0.974 | 0.022 | 11.4 ms (CPU) |
-| 1D-CNN | 0.906 | 0.033 | 0.4 ms (CPU) |
+| Features + RF | 0.974 | 0.022 | 8.8 ms (CPU) |
+| 1D-CNN | 0.900 | 0.034 | 0.3 ms (CPU) |
 
 Calibration with 30 s per activity from a new simulated user raises task-state accuracy from 0.86 to 1.00. Confusion matrices are in `results/metrics.json` and `docs/assets/har_results.png`.
 
