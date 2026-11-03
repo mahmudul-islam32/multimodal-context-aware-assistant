@@ -1,6 +1,6 @@
 # Architecture: multimodal-context-aware-assistant
 
-> Status: design. All components are **planned**.
+> Status: implemented in v0.1. Deviations from the original plan: the event log uses SQLite rather than PostgreSQL; retrieval is an in-process hybrid BM25 + TF-IDF index rather than pgvector or Qdrant; the UI is a static PWA rather than Next.js; the grounding check is lexical (content words and exact numbers) rather than NLI.
 
 ## Goals and constraints
 
@@ -94,7 +94,7 @@ sequenceDiagram
 
 ## Components
 
-| Component | Responsibility | Planned technology |
+| Component | Responsibility | Technology (planned → v0.1) |
 |---|---|---|
 | Sensor bridge | Stream IMU data with timestamps | Phone app or browser DeviceMotion API, WebSocket |
 | Signal pipeline | Resample, low-pass filter, windowing, features | NumPy, SciPy |
@@ -132,7 +132,7 @@ sequenceDiagram
 - If an external LLM API is used, only redacted query text and document chunks are sent, to an EU-hosted endpoint.
 - Retention and deletion procedures are described in [EVALUATION.md](EVALUATION.md).
 
-## Planned repository layout
+## Repository layout (v0.1)
 
 ```text
 src/mcaa/
@@ -144,9 +144,12 @@ src/mcaa/
   policy/       # adaptive output policy
   api/          # FastAPI app
   study/        # conditions, logging, export
-web/            # Next.js PWA
-configs/        # scenarios, policy, models
-eval/           # offline evaluation harness
-paper/          # LaTeX sources
+  vision/       # optional camera context
+  web/static/   # PWA (HTML/JS), phone sensor page
+configs/        # scenarios, context rules, policy, HAR
+data/docs/      # approved sample documents per scenario
+eval/           # gold questions, red-team set, study analysis
+scripts/        # figures and demo recording
+results/        # evaluation report
 docs/
 ```

@@ -27,3 +27,11 @@ study/participants/
 .DS_Store
 .idea/
 .vscode/
+
+# project
+data/raw/
+data/runtime/
+results/*.db
+*.egg-info/
+.pytest_cache/
+.ruff_cache/

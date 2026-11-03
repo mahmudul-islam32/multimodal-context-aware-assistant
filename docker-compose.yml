@@ -1,0 +1,17 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      MCAA_SCENARIO: technician
+      MCAA_GENERATOR: extractive          # set to "llm" to use the Ollama service below
+      MCAA_LLM_BASE_URL: http://ollama:11434/v1
+      MCAA_LLM_MODEL: llama3.1:8b
+    volumes:
+      - ./data/runtime:/app/data/runtime   # study log (pseudonymised), never committed
+  ollama:                                   # optional local LLM
+    image: ollama/ollama:0.5.7
+    profiles: ["llm"]
+    volumes: ["ollama:/root/.ollama"]
+volumes:
+  ollama: {}

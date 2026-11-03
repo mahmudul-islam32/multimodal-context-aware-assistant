@@ -1,0 +1,27 @@
+# F-04 context rules. Evaluated top to bottom; first match wins.
+# Signals: p_idle, p_moving, p_hands_busy (EMA of HAR probabilities),
+# noise_dbfs, asr_confidence, no_touch_s, step_manual, camera_hands_busy.
+version: context-v1
+min_dwell_s: 4        # at most one state change per 4 s
+confirm_updates: 2    # candidate must win 2 evaluations in a row
+ema_alpha: 0.5
+rules:
+  - state: NOISY
+    when_any:
+      - {noise_dbfs_gt: -20}
+      - {asr_confidence_lt: 0.45}
+    reason: loud environment or poor speech recognition
+  - state: MOVING
+    when: {p_moving_gt: 0.6}
+    confidence_from: p_moving
+    reason: walking detected
+  - state: HANDS_BUSY
+    when_any:
+      - {p_hands_busy_gt: 0.55}
+      - {camera_hands_busy_gt: 0.7}
+      - {step_manual: true, no_touch_s_gt: 20}
+    confidence_from: p_hands_busy
+    reason: manual work detected or manual step without touch
+  - state: IDLE
+    confidence_from: p_idle
+    reason: standing or sitting, hands free

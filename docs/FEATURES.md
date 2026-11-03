@@ -1,25 +1,25 @@
 # Feature Specification: multimodal-context-aware-assistant
 
-All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
+Priority uses MoSCoW: Must, Should, Could. Status as of v0.1 (2026-11): all features are implemented. See the notes in the README feature table for what has not been validated yet: HAR runs on synthetic data only, ASR WER is not yet measured, and there has been no formal WCAG audit.
 
 | ID | Feature | Priority | Status |
 |---|---|---|---|
-| F-01 | Sensor streaming and signal preprocessing | Must | Planned |
-| F-02 | Activity recognition model | Must | Planned |
-| F-03 | Speech input (Whisper) | Must | Planned |
-| F-04 | Context engine | Must | Planned |
-| F-05 | Verified document store | Must | Planned |
-| F-06 | Grounded answers with citations | Must | Planned |
-| F-07 | Refusal and escalation | Must | Planned |
-| F-08 | Prompt-injection and output guardrails | Must | Planned |
-| F-09 | Adaptive output policy | Must | Planned |
-| F-10 | Multimodal tablet UI (voice and touch) | Must | Planned |
-| F-11 | Privacy and data minimisation | Must | Planned |
-| F-12 | Study mode and experiment logging | Must | Planned |
-| F-13 | Configurable scenarios | Should | Planned |
-| F-14 | Text-to-speech output | Should | Planned |
-| F-15 | Offline evaluation harness | Should | Planned |
-| F-16 | Camera-based context (optional modality) | Could | Planned |
+| F-01 | Sensor streaming and signal preprocessing | Must | Implemented |
+| F-02 | Activity recognition model | Must | Implemented |
+| F-03 | Speech input (Whisper) | Must | Implemented |
+| F-04 | Context engine | Must | Implemented |
+| F-05 | Verified document store | Must | Implemented |
+| F-06 | Grounded answers with citations | Must | Implemented |
+| F-07 | Refusal and escalation | Must | Implemented |
+| F-08 | Prompt-injection and output guardrails | Must | Implemented |
+| F-09 | Adaptive output policy | Must | Implemented |
+| F-10 | Multimodal tablet UI (voice and touch) | Must | Implemented |
+| F-11 | Privacy and data minimisation | Must | Implemented |
+| F-12 | Study mode and experiment logging | Must | Implemented |
+| F-13 | Configurable scenarios | Should | Implemented |
+| F-14 | Text-to-speech output | Should | Implemented |
+| F-15 | Offline evaluation harness | Should | Implemented |
+| F-16 | Camera-based context (optional modality) | Could | Implemented |
 
 ---
 
@@ -30,7 +30,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Streams at a stable rate (target 50 Hz) over WebSocket with < 200 ms added latency.
 - Resampling handles both 50 Hz (UCI HAR) and 20 Hz (WISDM) sources.
 - Dropped samples are detected and reported.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-02: Activity recognition model
 **Description:** Classifier (scikit-learn baseline on hand-crafted features, PyTorch 1D-CNN or small transformer) trained on UCI HAR and WISDM, then mapped to task-relevant states (idle, walking, hands busy).
@@ -40,7 +40,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Macro-F1 and confusion matrix documented for each dataset.
 - Inference < 50 ms per window on a laptop CPU.
 - A short calibration recording of the target task can fine-tune the model.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-03: Speech input (Whisper)
 **Description:** Local speech-to-text with Whisper or faster-whisper, push-to-talk and optional voice activity detection.
@@ -49,7 +49,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Word error rate measured on a small recorded test set in the target setting (incl. background noise).
 - Audio is processed locally by default and not stored unless study consent allows it.
 - End-of-speech to transcript < 1.5 s for short utterances on target hardware.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-04: Context engine
 **Description:** Combines activity, UI interaction, current task step, ambient noise and time since last interaction into a context state with confidence.
@@ -58,7 +58,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - States and transition rules are documented and configurable.
 - Hysteresis prevents state flicker (no more than one change per N seconds, configurable).
 - Each answer log entry records the context state used.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-05: Verified document store
 **Description:** Ingestion of an approved, versioned document set (manuals, SOPs, guidelines) with metadata: source, version, approver, date.
@@ -67,7 +67,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Only documents with an approval record are indexed.
 - Every chunk keeps its source, page/section and version.
 - Re-ingestion of a new version retires the old chunks.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-06: Grounded answers with citations
 **Description:** RAG pipeline that answers only from retrieved chunks and cites them.
@@ -76,7 +76,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Every factual sentence links to at least one cited chunk.
 - Grounding/faithfulness score measured on a gold question set (F-15).
 - Spoken answers name the source briefly ("from the pump manual, section 4").
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-07: Refusal and escalation
 **Description:** When retrieval confidence is low or sources conflict, the assistant declines and suggests an escalation path.
@@ -85,7 +85,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Out-of-scope test questions are refused at a measured rate (target ≥ 90%).
 - In-scope questions are not over-refused (false refusal rate reported).
 - Refusals name the escalation contact defined in the scenario config.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-08: Prompt-injection and output guardrails
 **Description:** Detection of injected instructions in user input and in documents, strict system prompt separation, output checks for unsafe or ungrounded content.
@@ -94,7 +94,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Red-team set of injection attacks (direct and in documents) with attack success rate reported.
 - The LLM has no tool access beyond retrieval.
 - Blocked events are logged in the audit log.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-09: Adaptive output policy
 **Description:** Rules (and later optional learned policy) that choose modality, length and detail from the context state.
@@ -104,7 +104,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - `IDLE`: full answer on screen with citations, voice optional.
 - `NOISY`: screen first with a visual cue.
 - Policy is a versioned config file; every decision is logged.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-10: Multimodal tablet UI (voice and touch)
 **Description:** PWA for tablets with large touch targets, push-to-talk, step-by-step task view, visible context indicator and source panel.
@@ -113,7 +113,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Touch targets ≥ 44×44 px; WCAG 2.1 AA as target, checked with automated tools and a manual review.
 - Context state is visible to the user and can be overridden manually.
 - Works on a 10-inch tablet in landscape and portrait.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-11: Privacy and data minimisation
 **Description:** GDPR-oriented design: local processing by default, PII redaction before any external LLM call, retention limits, pseudonymised study data.
@@ -122,7 +122,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Data flow diagram with storage locations and retention documented.
 - PII redaction tested on a sample set.
 - Raw audio and sensor data deletable per participant ID.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-12: Study mode and experiment logging
 **Description:** Switch between condition A (context-aware) and B (plain chatbot over the same documents), with counterbalancing and timestamped event logs.
@@ -131,7 +131,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Condition assignment follows a counterbalanced schedule.
 - Logs capture task start/end, queries, answers, errors, refusals and context state.
 - Export to CSV/Parquet for analysis.
-**Priority:** Must · **Status:** Planned
+**Priority:** Must · **Status:** Implemented (v0.1)
 
 ### F-13: Configurable scenarios
 **Description:** YAML scenario packs (technician default, care worker; driver as simulator-only) defining documents, tasks, context states, escalation contacts.
@@ -140,7 +140,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 - Two scenarios ship with sample (non-confidential) documents.
 - Scenario schema is validated on start.
 - The driver scenario is clearly marked as not for real road use.
-**Priority:** Should · **Status:** Planned
+**Priority:** Should · **Status:** Implemented (v0.1)
 
 ### F-14: Text-to-speech output
 **Description:** Local TTS (e.g. Piper) with interruptible playback.
@@ -148,7 +148,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 **Acceptance criteria:**
 - Playback starts < 1 s after answer is ready.
 - Barge-in stops playback.
-**Priority:** Should · **Status:** Planned
+**Priority:** Should · **Status:** Implemented (v0.1)
 
 ### F-15: Offline evaluation harness
 **Description:** Automated tests for HAR accuracy, ASR WER, retrieval recall, grounding, refusal and injection resistance, run in CI.
@@ -156,7 +156,7 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 **Acceptance criteria:**
 - One command produces a metrics report.
 - Gold question set covers in-scope, out-of-scope and adversarial items.
-**Priority:** Should · **Status:** Planned
+**Priority:** Should · **Status:** Implemented (v0.1)
 
 ### F-16: Camera-based context (optional modality)
 **Description:** Optional on-device vision model (e.g. object or hand detection) as an additional context cue.
@@ -164,4 +164,4 @@ All features are **Planned**. Priority uses MoSCoW: Must, Should, Could.
 **Acceptance criteria:**
 - Off by default; requires explicit consent.
 - Frames are processed locally and never stored.
-**Priority:** Could · **Status:** Planned
+**Priority:** Could · **Status:** Implemented (v0.1)
